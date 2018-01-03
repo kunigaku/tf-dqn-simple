@@ -1,53 +1,24 @@
 import numpy as np
 
 from catch_ball import CatchBall
-from dqn_agent import DQNAgent
+from dqn_model import get_dqn_model
 
 
 if __name__ == "__main__":
-    # parameters
-    n_epochs = 1000
-
     # environment, agent
     env = CatchBall()
-    agent = DQNAgent(env.enable_actions, env.name)
+    dqn = get_dqn_model(env)
 
-    # variables
-    win = 0
+    try:
+        dqn.load_weights('dqn_{}_weights.h5f'.format("catch_ball"))
+        print("start from saved weights")
+    except:
+        print("start from random weights")
 
-    for e in range(n_epochs):
-        # reset
-        frame = 0
-        loss = 0.0
-        Q_max = 0.0
-        env.reset()
-        state_t_1, reward_t, terminal = env.observe()
+    # Okay, now it's time to learn something! We visualize the training here for show, but this
+    # slows down training quite a lot. You can always safely abort the training prematurely using
+    # Ctrl + C.
+    dqn.fit(env, nb_steps=50000, visualize=False, verbose=1)
 
-        while not terminal:
-            state_t = state_t_1
-
-            # execute action in environment
-            action_t = agent.select_action(state_t, agent.exploration)
-            env.execute_action(action_t)
-
-            # observe environment
-            state_t_1, reward_t, terminal = env.observe()
-
-            # store experience
-            agent.store_experience(state_t, action_t, reward_t, state_t_1, terminal)
-
-            # experience replay
-            agent.experience_replay()
-
-            # for log
-            frame += 1
-            loss += agent.current_loss
-            Q_max += np.max(agent.Q_values(state_t))
-            if reward_t == 1:
-                win += 1
-
-        print("EPOCH: {:03d}/{:03d} | WIN: {:03d} | LOSS: {:.4f} | Q_MAX: {:.4f}".format(
-            e, n_epochs - 1, win, loss / frame, Q_max / frame))
-
-    # save model
-    agent.save_model()
+    # After training is done, we save the final weights.
+    dqn.save_weights('dqn_{}_weights.h5f'.format("catch_ball"), overwrite=True)
