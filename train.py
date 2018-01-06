@@ -1,4 +1,5 @@
 import numpy as np
+import datetime
 
 from catch_ball import CatchBall
 from dqn_model import get_dqn_model
@@ -22,3 +23,6 @@ if __name__ == "__main__":
 
     # After training is done, we save the final weights.
     dqn.save_weights('dqn_{}_weights.h5f'.format("catch_ball"), overwrite=True)
+    dqn.save_weights('dqn_{}_weights.{}.h5f.bak'.format(
+        "catch_ball", datetime.datetime.today().strftime("%Y-%m%d-%H%M")
+    ), overwrite=True)
